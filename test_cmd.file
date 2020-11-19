@@ -1,0 +1,88 @@
+/run/initialize
+/tracking/verbose 0
+
+/particle_generator/Particle_index 1
+/CRY/input returnNeutrons 1
+/CRY/input returnProtons 0
+/CRY/input returnGammas 0
+/CRY/input returnElectrons 0
+/CRY/input returnMuons 0
+/CRY/input returnPions 0
+/CRY/input date 9-16-2020
+/CRY/input latitude 59.33
+/CRY/input altitude 0
+/CRY/input subboxLength 2
+/CRY/update
+/run/beamOn 100000
+
+
+/particle_generator/Particle_index 4
+/CRY/input returnNeutrons 0
+/CRY/input returnProtons 0
+/CRY/input returnGammas 0
+/CRY/input returnElectrons 1
+/CRY/input returnMuons 0
+/CRY/input returnPions 0
+/CRY/input date 9-16-2020
+/CRY/input latitude 59.33
+/CRY/input altitude 0
+/CRY/input subboxLength 2
+/CRY/update
+/run/beamOn 100000
+
+/particle_generator/Particle_index 5
+/CRY/input returnNeutrons 0
+/CRY/input returnProtons 0
+/CRY/input returnGammas 0
+/CRY/input returnElectrons 0
+/CRY/input returnMuons 1
+/CRY/input returnPions 0
+/CRY/input date 9-16-2020
+/CRY/input latitude 59.33
+/CRY/input altitude 0
+/CRY/input subboxLength 2
+/CRY/update
+/run/beamOn 100000
+
+/particle_generator/Particle_index 2
+/CRY/input returnNeutrons 0
+/CRY/input returnProtons 1
+/CRY/input returnGammas 0
+/CRY/input returnElectrons 0
+/CRY/input returnMuons 0
+/CRY/input returnPions 0
+/CRY/input date 9-16-2020
+/CRY/input latitude 59.33
+/CRY/input altitude 0
+/CRY/input subboxLength 2
+/CRY/update
+/run/beamOn 100000
+
+/particle_generator/Particle_index 3
+/CRY/input returnNeutrons 0
+/CRY/input returnProtons 0
+/CRY/input returnGammas 1
+/CRY/input returnElectrons 
+/CRY/input returnMuons 0
+/CRY/input returnPions 0
+/CRY/input date 9-16-2020
+/CRY/input latitude 59.33
+/CRY/input altitude 0
+/CRY/input subboxLength 2
+/CRY/update
+/run/beamOn 100000
+
+
+/particle_generator/Particle_index 6
+/CRY/input returnNeutrons 0
+/CRY/input returnProtons 0
+/CRY/input returnGammas 0
+/CRY/input returnElectrons 0
+/CRY/input returnMuons 0
+/CRY/input returnPions 1
+/CRY/input date 9-16-2020
+/CRY/input latitude 59.33
+/CRY/input altitude 0
+/CRY/input subboxLength 2
+/CRY/update
+/run/beamOn 100000
