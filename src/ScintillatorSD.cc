@@ -78,18 +78,18 @@ void ScintillatorSD::Initialize(G4HCofThisEvent*)
 //.....
 G4bool ScintillatorSD::ProcessHits(G4Step* aStep, G4TouchableHistory* )
 {
-
-    if (aStep -> GetPreStepPoint() -> GetPhysicalVolume() -> GetName() != "Layer") return false;
     
+    //if (aStep -> GetPreStepPoint() -> GetPhysicalVolume() -> GetName() != "Scint_layerPV") return false; 
+
     // Get Direction
     G4Track * theTrack = aStep  ->  GetTrack();
-   
     G4ThreeVector stepDelta = aStep->GetDeltaPosition();
     G4double direction = stepDelta.getZ();
 
     //Get particle name
     G4ParticleDefinition *particleDef = theTrack -> GetDefinition();
     G4String particleName =  particleDef -> GetParticleName();
+    if (particleName == "opticalphoton") return false;
     
     // Get particle PDG code
     G4int pdg = particleDef ->GetPDGEncoding();
@@ -106,7 +106,9 @@ G4bool ScintillatorSD::ProcessHits(G4Step* aStep, G4TouchableHistory* )
     
     // Position
     G4ThreeVector pos = PreStep->GetPosition();
-    G4double z = pos.getZ();
+    G4double x = pos.getX()/cm;
+    G4double y = pos.getY()/cm;
+    G4double z = pos.getZ()/cm;
 
     G4ThreeVector vertex = theTrack->GetVertexPosition();
     G4double origin = vertex.getZ();
@@ -114,11 +116,19 @@ G4bool ScintillatorSD::ProcessHits(G4Step* aStep, G4TouchableHistory* )
 
     // Read voxel indeces: i is the x index, k is the z index
     const G4VTouchable* touchable = aStep->GetPreStepPoint()->GetTouchable();
-    G4int k  = touchable->GetReplicaNumber(0);
-    G4int origin_replica = theTrack->GetOriginTouchable()->GetReplicaNumber(0); // Not used anymore
-    G4int group_ID = touchable->GetReplicaNumber(4);
-    G4int module_ID = touchable->GetReplicaNumber(3);
+    G4int stave_ID  = touchable->GetReplicaNumber(0);
+    G4int layer_ID = touchable -> GetReplicaNumber(1);
+    G4int module_ID = touchable->GetReplicaNumber(2);
+    //G4int group_ID = touchable->GetReplicaNumber(3); 
 
+    //std::cout << trackID << " :: "<<stave_ID <<"," << layer_ID <<"," << module_ID << "," << group_ID << std::endl; 
+    //std::cout << touchable->GetTranslation(0) << std::endl;
+    
+    G4ThreeVector scint_pos = touchable->GetTranslation(0);
+    G4double scint_x = scint_pos.getX()/cm;
+    G4double scint_y = scint_pos.getY()/cm;
+    G4double scint_z = scint_pos.getZ()/cm;
+    
     // Get Time
     G4double time = theTrack->GetGlobalTime() / CLHEP::ns;
 
@@ -150,12 +160,10 @@ G4bool ScintillatorSD::ProcessHits(G4Step* aStep, G4TouchableHistory* )
         const std::vector<const G4Track*>* secondary = aStep->GetSecondaryInCurrentStep();
         for (int j = 0; j < (*secondary).size(); j++) {
             particle = (*secondary)[j]->GetDefinition();
-            if (particle->GetParticleName() == "opticalphoton" && (*secondary)[j]->GetCreatorProcess()->GetProcessName() == "Scintillation" ) { photons++; } // Cerenkov exists in scintillator
+            if (particle->GetParticleName() == "opticalphoton" && (*secondary)[j]->GetCreatorProcess()->GetProcessName() == "Scintillation") { photons++; } // But Cerenkov exists in scintillator!!
+            // !!!! 
         }
     }
-
-    //if( direction>0 && DX>0) { //&& trackID==1 ) {
-    //if(DX) { 	    
                   
     // Get the pre-step kinetic energy
     G4double eKinPre = aStep -> GetPreStepPoint() -> GetKineticEnergy();
@@ -173,19 +181,26 @@ G4bool ScintillatorSD::ProcessHits(G4Step* aStep, G4TouchableHistory* )
     detectorHit -> SetTime(time);
     detectorHit -> SetName(name);
     detectorHit -> SetTrackID(trackID);
-    detectorHit -> SetXID(k);
-    detectorHit -> SetGroup_ID(group_ID);
+
+    detectorHit -> SetStave_ID(stave_ID);
+    detectorHit -> SetXID(layer_ID);
     detectorHit -> SetMod_ID(module_ID);
-    detectorHit -> SetPosZ(tracklength);
+    //detectorHit -> SetGroup_ID(group_ID);
+    
+    detectorHit -> SetPosX(scint_x);
+    detectorHit -> SetPosY(scint_y);
+    detectorHit -> SetPosZ(scint_z);
+
+    detectorHit -> SetPosX_particle(x);
+    detectorHit -> SetPosY_particle(y);
+    detectorHit -> SetPosZ_particle(z);
+
+    detectorHit -> SetTrackLength(tracklength);
     detectorHit -> SetEDep(energyDeposit);
     detectorHit -> SetKinEn(eKinPost);
-    detectorHit -> SetOrigin(origin_replica);
     detectorHit->SetPhotons(photons);
     HitsCollection -> insert(detectorHit);
 
-    //std::cout << " Scint :: slice: "  << aStep->GetPreStepPoint()->GetTouchableHandle()->GetReplicaNumber(3) << " Scint layer: " << k  << " Group: "
-    //<< aStep->GetPreStepPoint()->GetTouchableHandle()->GetReplicaNumber(4)<< std::endl;
-    //std::cout << "Scintillator :  End of hit event " << std::endl;
     return true;
 }
 

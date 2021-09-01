@@ -26,7 +26,7 @@
 // Hadrontherapy advanced example for Geant4
 // See more at: https://twiki.cern.ch/twiki/bin/view/Geant4/AdvancedExamplesHadrontherapy
 
-#include "TubeSD.hh"
+#include "SiliconSD.hh"
 
 #include "G4Step.hh"
 #include "G4VTouchable.hh"
@@ -49,34 +49,40 @@
 #include "G4TransportationManager.hh"
 #include "G4VSensitiveDetector.hh"
 #include "G4SystemOfUnits.hh"
-
+#include "G4Scintillation.hh"
+#include "G4Cerenkov.hh"
 
 //.....
-TubeSD::TubeSD(G4String name):
+SiliconSD::SiliconSD(G4String name):
 G4VSensitiveDetector(name)
 {
     G4String HCname;
-    collectionName.insert(HCname="TubeHitCollection");
+    collectionName.insert(HCname="SiliconHitCollection");
     HitsCollection = NULL;
     sensitiveDetectorName = name;
     
 }
 
 //.....
-TubeSD::~TubeSD()
+SiliconSD::~SiliconSD()
 {}
 
 //.....
-void TubeSD::Initialize(G4HCofThisEvent*)
+void SiliconSD::Initialize(G4HCofThisEvent*)
 {
     
-    HitsCollection = new NNbarHitsCollection(sensitiveDetectorName,
-                                                             collectionName[0]);
+    HitsCollection = new NNbarHitsCollection(sensitiveDetectorName,collectionName[0]);
 }
 
 //.....
-G4bool TubeSD::ProcessHits(G4Step* aStep, G4TouchableHistory* )
+G4bool SiliconSD::ProcessHits(G4Step* aStep, G4TouchableHistory* )
 {
+
+    //std::cout<< " shiled hit class SD " << std::endl;
+
+    //if (aStep -> GetPreStepPoint() -> GetPhysicalVolume() -> GetName() != "Layer") return false;
+    
+    // Get Direction
     G4Track * theTrack = aStep  ->  GetTrack();
    
     G4ThreeVector stepDelta = aStep->GetDeltaPosition();
@@ -98,14 +104,12 @@ G4bool TubeSD::ProcessHits(G4Step* aStep, G4TouchableHistory* )
     // Get step length  
     G4double DX = aStep -> GetStepLength();
     G4StepPoint* PreStep = aStep->GetPreStepPoint();
-    G4StepPoint* PostStep = aStep->GetPreStepPoint();
     
     // Position
-    G4ThreeVector pos1 = PreStep->GetPosition();
-    G4ThreeVector pos2 = PostStep->GetPosition();
-    G4double x = ((pos1+pos2)/2.).getX();
-    G4double y = ((pos1+pos2)/2.).getY();
-    G4double z = ((pos1+pos2)/2.).getZ();
+    G4ThreeVector pos = PreStep->GetPosition();
+    G4double x = pos.getX();
+    G4double y = pos.getY();
+    G4double z = pos.getZ();
 
     G4ThreeVector vertex = theTrack->GetVertexPosition();
     G4double origin = vertex.getZ();
@@ -128,7 +132,7 @@ G4bool TubeSD::ProcessHits(G4Step* aStep, G4TouchableHistory* )
     G4TouchableHandle touchPreStep = PreStep->GetTouchableHandle();
     G4VPhysicalVolume* volumePre = touchPreStep->GetVolume();
     G4String namePre = volumePre->GetName();
-    
+   
     G4int parentID = 0;
     parentID = theTrack->GetParentID();
 
@@ -157,6 +161,7 @@ G4bool TubeSD::ProcessHits(G4Step* aStep, G4TouchableHistory* )
     detectorHit -> SetTrackLength(DX);
     detectorHit -> SetTrackID(trackID);
     detectorHit -> SetXID(k);
+    detectorHit -> SetPosZ(tracklength);
     detectorHit -> SetEDep(energyDeposit);
     detectorHit -> SetKinEn(eKinPost);
     detectorHit -> SetPosX(x);
@@ -169,7 +174,7 @@ G4bool TubeSD::ProcessHits(G4Step* aStep, G4TouchableHistory* )
 }
 
 //......
-void TubeSD::EndOfEvent(G4HCofThisEvent* HCE)
+void SiliconSD::EndOfEvent(G4HCofThisEvent* HCE)
 {
     
     static G4int HCID = -1;

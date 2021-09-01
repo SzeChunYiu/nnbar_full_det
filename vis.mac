@@ -79,5 +79,8 @@
 /vis/viewer/set/autoRefresh true
 /vis/verbose warnings
 #
+
+/vis/viewer/set/background white
+
 # For file-based drivers, use this to create an empty detector view:
 #/vis/viewer/flush

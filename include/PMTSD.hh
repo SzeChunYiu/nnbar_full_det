@@ -23,60 +23,36 @@
 // * acceptance of all terms of the Geant4 Software license.          *
 // ********************************************************************
 //
-//
 
-#include "SteppingAction.hh"
-#include "EventAction.hh"
-#include "Analysis.hh"
+#ifndef PMTSD_h
+#define PMTSD_h 1
 
-#include "G4UnitsTable.hh"
-#include "G4PhysicalConstants.hh"
-#include "G4Step.hh"
-#include "G4Track.hh"
-#include "G4OpticalPhoton.hh"
-#include "G4Event.hh"
-#include "G4RunManager.hh"
-#include "G4DynamicParticle.hh"
-//....
-extern G4double event_number;
-extern std::ofstream pi0_outFile;
+#include "G4VSensitiveDetector.hh"
+#include "globals.hh"
 
-SteppingAction::SteppingAction()
-: G4UserSteppingAction()
-{ 
-  fScintillationCounter = 0;
-  fCerenkovCounter      = 0;
-  fEventNumber = -1;
-}
+#include "NNbarHit.hh"
 
-//....
-
-SteppingAction::~SteppingAction()
-{ 
-}
-
-//....
-
-void SteppingAction::UserSteppingAction(const G4Step* step)
+class G4Step;
+class G4HCofThisEvent;
+class G4TouchableHistory;
+class PMTSD : public G4VSensitiveDetector
 {
- 
-  G4int eventNumber = G4RunManager::GetRunManager()->GetCurrentEvent()->GetEventID();
-
-  
-  G4Track* track = step->GetTrack();
-  G4int parentID = track->GetParentID();
-  G4int ID = track->GetTrackID();
-
-  if (parentID == 0 & step->GetPreStepPoint()->GetTouchable()->GetVolume()->GetName()=="WorldPV" & step->IsFirstStepInVolume()) {
+public:
+    PMTSD(G4String name);
+    ~PMTSD();
     
-    const std::vector<const G4Track*>* secondary = step->GetSecondaryInCurrentStep();
-    if ((*secondary).size()>0){
-      for (int j = 0; j < (*secondary).size(); j++) {
-        G4double KE = (*secondary)[j]->GetKineticEnergy();
-        G4ThreeVector momentum = (*secondary)[j]->GetMomentumDirection();
-        //std::cout << event_number << " particle: " << j << " :: "<<momentum[0] << " " << momentum[1] << " " << momentum[2] << std::endl;
-        pi0_outFile << event_number << "," << KE << "," << momentum[0] << "," << momentum[1] << "," << momentum[2] <<G4endl;           
-      }
-    }  
-  }
-} 
+    
+    std::ofstream ofs;
+    void Initialize(G4HCofThisEvent*);
+    
+    G4bool ProcessHits(G4Step*aStep,G4TouchableHistory*ROhist);
+    
+    void EndOfEvent(G4HCofThisEvent*HCE);
+    
+private:
+    NNbarHitsCollection *HitsCollection;
+    G4String sensitiveDetectorName;
+};
+#endif
+
+

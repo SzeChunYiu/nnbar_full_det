@@ -77,9 +77,18 @@ void TPCSD::Initialize(G4HCofThisEvent*)
 //.....
 G4bool TPCSD::ProcessHits(G4Step* aStep, G4TouchableHistory* )
 {
+
+
     // Get Direction
-    G4Track * theTrack = aStep  ->  GetTrack();
-   
+    G4Track * theTrack = aStep  ->  GetTrack();   
+
+    G4int parentID = 0;
+    parentID = theTrack->GetParentID();
+    //if (parentID >0) {return false;}
+
+    G4String proc = "primary"; 
+    if (parentID > 0) { proc = theTrack->GetCreatorProcess()->GetProcessName();}
+    
     G4ThreeVector stepDelta = aStep->GetDeltaPosition();
     G4double direction = stepDelta.getZ();
 
@@ -103,20 +112,26 @@ G4bool TPCSD::ProcessHits(G4Step* aStep, G4TouchableHistory* )
     
     // Position
     G4ThreeVector pos = PreStep->GetPosition();
+    G4double x = pos.getX();
+    G4double y = pos.getY();
     G4double z = pos.getZ();
 
     G4ThreeVector vertex = theTrack->GetVertexPosition();
     G4double origin = vertex.getZ();
     G4double tracklength = z - origin;
-
+    
     // Read voxel indexes: i is the x index, k is the z index
     const G4VTouchable* touchable = aStep->GetPreStepPoint()->GetTouchable();
-    G4int group_ID = touchable->GetReplicaNumber(3); // Only return the group and module number
-    G4int module_ID = touchable->GetReplicaNumber(2);
+    G4int k = touchable ->GetReplicaNumber(1); // which layer it is in // which bar it is in
+    G4int TPC_index = touchable -> GetReplicaNumber(2); // which TPC it is in
+    
+    G4ThreeVector TPC_pos = touchable->GetTranslation(0);
+    G4double TPC_x = TPC_pos.getX()/cm;
+    G4double TPC_y = TPC_pos.getY()/cm;
+    G4double TPC_z = TPC_pos.getZ()/cm;
+    
     // Get Time
     G4double time = theTrack->GetGlobalTime() / CLHEP::ns;
-
-    // Get Local Time
     G4double localTime = theTrack->GetLocalTime() / CLHEP::ns;
 
     // Get Name
@@ -125,27 +140,19 @@ G4bool TPCSD::ProcessHits(G4Step* aStep, G4TouchableHistory* )
     G4TouchableHandle touchPreStep = PreStep->GetTouchableHandle();
     G4VPhysicalVolume* volumePre = touchPreStep->GetVolume();
     G4String namePre = volumePre->GetName();
-   
-    G4int parentID = 0;
-    G4String proc = ""; 
 
-    if (trackID > 1 && theTrack->GetOriginTouchable()->GetVolume()->GetName() != "World") {
-            //std::cout << name << " ID : " << trackID << " step 1 " << theTrack->GetOriginTouchable()->GetVolume()->GetName() << std::endl;
-            parentID = theTrack->GetParentID();
-            if (parentID > 0) { proc = theTrack->GetCreatorProcess()->GetProcessName();}
-            else { proc = "primary"; }
-            //std::cout << " Scint hit : " << name << " ID : " << trackID  << theTrack->GetOriginTouchable()->GetVolume()->GetName() << "  " << proc << " the parent ID is : " << parentID << std::endl;
+    G4int electrons = 0;
+    G4ParticleDefinition* particle;
+    if (particleName != "opticalphoton") {
+            const std::vector<const G4Track*>* secondary = aStep->GetSecondaryInCurrentStep();
+            for (int j = 0; j < (*secondary).size(); j++) {
+                    particle = (*secondary)[j]->GetDefinition();
+                    if (particle->GetParticleName() == "e-") {electrons++;}
+                    else {std::cout<< particle->GetParticleName() << std::endl;} // Cerenkov exists in scintillator
+            }
     }
 
-    else {
-    proc = "primary";
-            parentID = 0;
-    }
 
-    //std::cout << " Shield Hit " << energyDeposit << std::endl;
-
-
-    G4int photons = 0;
     // Get the pre-step kinetic energy
     G4double eKinPre = aStep -> GetPreStepPoint() -> GetKineticEnergy();
     // Get the post-step kinetic energy
@@ -162,14 +169,23 @@ G4bool TPCSD::ProcessHits(G4Step* aStep, G4TouchableHistory* )
     detectorHit -> SetTime(time);
     detectorHit -> SetName(name);
     detectorHit -> SetTrackID(trackID);
-  //detectorHit -> SetXID(k);
-    detectorHit -> SetGroup_ID(group_ID);
-    detectorHit -> SetMod_ID(module_ID);
-    detectorHit -> SetPosZ(tracklength);
+    
+    detectorHit -> SetXID(k);
+    detectorHit -> SetMod_ID(TPC_index);
+
+    //return the position of the TPC long bar! 
+    detectorHit -> SetPosX(TPC_x);
+    detectorHit -> SetPosY(TPC_y);
+    detectorHit -> SetPosZ(TPC_z);
+
+    // remarks: here it is named set photons but actually it counts the electrons in the TPC, too lazy to add one more function
+    detectorHit -> SetPhotons(electrons);
+
+    detectorHit -> SetTrackLength(DX); // not actually trackLength but lets stay in this way..
     detectorHit -> SetEDep(energyDeposit);
     detectorHit -> SetKinEn(eKinPost);
     HitsCollection -> insert(detectorHit);
-    //}
+    
     return true;
 }
 

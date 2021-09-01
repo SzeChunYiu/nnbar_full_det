@@ -24,59 +24,68 @@
 // ********************************************************************
 //
 //
+// $Id$
+//
+// 
 
-#include "SteppingAction.hh"
-#include "EventAction.hh"
-#include "Analysis.hh"
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-#include "G4UnitsTable.hh"
-#include "G4PhysicalConstants.hh"
-#include "G4Step.hh"
-#include "G4Track.hh"
-#include "G4OpticalPhoton.hh"
-#include "G4Event.hh"
-#include "G4RunManager.hh"
-#include "G4DynamicParticle.hh"
-//....
-extern G4double event_number;
-extern std::ofstream pi0_outFile;
+#ifndef PhysicsList_h
+#define PhysicsList_h 1
 
-SteppingAction::SteppingAction()
-: G4UserSteppingAction()
-{ 
-  fScintillationCounter = 0;
-  fCerenkovCounter      = 0;
-  fEventNumber = -1;
-}
+#include "G4VModularPhysicsList.hh"
+#include "globals.hh"
+#include "G4EmConfigurator.hh"
 
-//....
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+class G4Cerenkov;
+class G4Scintillation;
+class G4OpAbsorption;
+class G4OpRayleigh;
+class G4OpBoundaryProcess;
 
-SteppingAction::~SteppingAction()
-{ 
-}
-
-//....
-
-void SteppingAction::UserSteppingAction(const G4Step* step)
+class PhysicsList: public G4VModularPhysicsList
 {
- 
-  G4int eventNumber = G4RunManager::GetRunManager()->GetCurrentEvent()->GetEventID();
+public:
+  PhysicsList();
+  virtual ~PhysicsList();
 
+  // Construct particle and physics
+  void ConstructParticle();
+  //void ConstructProcess();
+  //void ConstructNeutron();
+  void SetCuts();
+   
+
+
+private:
+
+  // these methods Construct physics processes and register them
+  //void ConstructDecay();
+  //void ConstructEM();
+  void ConstructOptical();
+  //void ConstructHadronElastic();
+  //void ConstructGammaNuclear();
   
-  G4Track* track = step->GetTrack();
-  G4int parentID = track->GetParentID();
-  G4int ID = track->GetTrackID();
+  void  AddPAIModel(const G4String&);
+  void  NewPAIModel(const G4ParticleDefinition*, const G4String& modname, const G4String& procname);
+  //void NewPAIModel(const G4ParticleDefinition* part,const G4String& modname,const G4String& procname);
+  //void AddPAIModel(const G4String& modname);
 
-  if (parentID == 0 & step->GetPreStepPoint()->GetTouchable()->GetVolume()->GetName()=="WorldPV" & step->IsFirstStepInVolume()) {
-    
-    const std::vector<const G4Track*>* secondary = step->GetSecondaryInCurrentStep();
-    if ((*secondary).size()>0){
-      for (int j = 0; j < (*secondary).size(); j++) {
-        G4double KE = (*secondary)[j]->GetKineticEnergy();
-        G4ThreeVector momentum = (*secondary)[j]->GetMomentumDirection();
-        //std::cout << event_number << " particle: " << j << " :: "<<momentum[0] << " " << momentum[1] << " " << momentum[2] << std::endl;
-        pi0_outFile << event_number << "," << KE << "," << momentum[0] << "," << momentum[1] << "," << momentum[2] <<G4endl;           
-      }
-    }  
-  }
-} 
+
+private:
+  G4Cerenkov*          theCerenkovProcess;
+  G4Scintillation*     theScintillationProcess;
+  G4OpAbsorption*      theAbsorptionProcess;
+  G4OpRayleigh*        theRayleighScatteringProcess;
+  G4OpBoundaryProcess* theBoundaryProcess;
+  G4EmConfigurator*    fConfig;
+};
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+#endif
+
+
+

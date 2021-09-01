@@ -31,6 +31,7 @@
 #include "G4VUserDetectorConstruction.hh"
 #include "globals.hh"
 
+class G4LogicalVolume;
 class G4VPhysicalVolume;
 class G4GlobalMagFieldMessenger;
 
@@ -48,7 +49,8 @@ class DetectorConstruction : public G4VUserDetectorConstruction
     // methods
     void DefineMaterials();
     G4VPhysicalVolume* DefineVolumes();
-  
+    G4LogicalVolume* TPCLV;
+
     // data members
     G4bool  fCheckOverlaps; // option to activate checking of volumes overlaps
 };

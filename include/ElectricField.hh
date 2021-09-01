@@ -24,59 +24,39 @@
 // ********************************************************************
 //
 //
+/// \file ElectricField.hh
+/// \brief Definition of the ElectricField class
 
-#include "SteppingAction.hh"
-#include "EventAction.hh"
-#include "Analysis.hh"
+#ifndef ElectricField_H
+#define ElectricField_H 1
 
-#include "G4UnitsTable.hh"
-#include "G4PhysicalConstants.hh"
-#include "G4Step.hh"
-#include "G4Track.hh"
-#include "G4OpticalPhoton.hh"
-#include "G4Event.hh"
-#include "G4RunManager.hh"
-#include "G4DynamicParticle.hh"
-//....
-extern G4double event_number;
-extern std::ofstream pi0_outFile;
+#include "globals.hh"
+#include "G4ElectricField.hh"
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string.h>
+#include <vector>
+#include <stdlib.h>
 
-SteppingAction::SteppingAction()
-: G4UserSteppingAction()
-{ 
-  fScintillationCounter = 0;
-  fCerenkovCounter      = 0;
-  fEventNumber = -1;
-}
+class G4GenericMessenger;
 
-//....
+/// Electric field
 
-SteppingAction::~SteppingAction()
-{ 
-}
-
-//....
-
-void SteppingAction::UserSteppingAction(const G4Step* step)
+class ElectricField : public G4ElectricField
 {
- 
-  G4int eventNumber = G4RunManager::GetRunManager()->GetCurrentEvent()->GetEventID();
-
-  
-  G4Track* track = step->GetTrack();
-  G4int parentID = track->GetParentID();
-  G4int ID = track->GetTrackID();
-
-  if (parentID == 0 & step->GetPreStepPoint()->GetTouchable()->GetVolume()->GetName()=="WorldPV" & step->IsFirstStepInVolume()) {
+  public:
+    ElectricField();
+    virtual ~ElectricField();
     
-    const std::vector<const G4Track*>* secondary = step->GetSecondaryInCurrentStep();
-    if ((*secondary).size()>0){
-      for (int j = 0; j < (*secondary).size(); j++) {
-        G4double KE = (*secondary)[j]->GetKineticEnergy();
-        G4ThreeVector momentum = (*secondary)[j]->GetMomentumDirection();
-        //std::cout << event_number << " particle: " << j << " :: "<<momentum[0] << " " << momentum[1] << " " << momentum[2] << std::endl;
-        pi0_outFile << event_number << "," << KE << "," << momentum[0] << "," << momentum[1] << "," << momentum[2] <<G4endl;           
-      }
-    }  
-  }
-} 
+    virtual void GetFieldValue(const G4double point[4],double* eField ) const;
+    
+  private:
+    void DefineCommands();
+
+    G4GenericMessenger* fMessenger;
+};
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+#endif
